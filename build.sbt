@@ -21,7 +21,7 @@ lazy val cheminotmiscSettings = buildSettings ++ commonSettings
 
 lazy val root = (project in file(".")).
   settings(commonSettings: _*).
-  settings(name := "cheminotmisc").
+  settings(name := "misc").
   settings(cheminotmiscSettings:_*).
   settings(libraryDependencies += "com.propensive" %% "rapture" % "2.0.0-M7" exclude ("javax.servlet", "servlet-api")).
   settings(libraryDependencies += "joda-time" % "joda-time" % "2.9.1").
