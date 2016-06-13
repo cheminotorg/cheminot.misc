@@ -5,10 +5,10 @@ import scala.concurrent.duration.FiniteDuration
 
 object Scheduler {
 
-  def schedule(delay: FiniteDuration, period: FiniteDuration)(f: => Unit): ScheduledExecutor = {
+  def schedule(delay: FiniteDuration, period: FiniteDuration)(f: ScheduledExecutor => Unit): ScheduledExecutor = {
     val executor = ScheduledExecutor(1)
-    executor.delayExecution(f)(period).foreach { _ =>
-      executor.schedule(f)(period)
+    executor.delayExecution(f(executor))(period).onSuccess {
+      case _ => executor.schedule(f(executor))(period)
     }
     executor
   }

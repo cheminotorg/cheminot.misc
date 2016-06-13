@@ -6,7 +6,6 @@ import java.util.zip._
 object ZipUtils {
 
   def unzip(zipfile: File, directory: File): Unit = {
-    Logger.info(s"Unzipping $zipfile to $directory")
     val zfile = new ZipFile(zipfile)
     val entries = zfile.entries()
     while (entries.hasMoreElements()) {
@@ -24,7 +23,6 @@ object ZipUtils {
         }
       }
     }
-    Logger.info("Unzipping done")
   }
 
 

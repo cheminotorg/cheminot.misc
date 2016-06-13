@@ -2,10 +2,10 @@ package org.cheminot.misc
 
 object Debug {
 
-  def measure[A](label: String)(f: => A): A = {
+  def measure[A](label: String)(f: => A)(g: Double => Unit): A = {
     val start = System.currentTimeMillis
     val x = f
-    Logger.debug(s"[$label]> ${System.currentTimeMillis - start} ms")
+    g(System.currentTimeMillis - start)
     x
   }
 }

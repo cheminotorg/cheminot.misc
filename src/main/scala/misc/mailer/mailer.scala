@@ -5,30 +5,28 @@ import scala.concurrent.Future
 import rapture.core._
 import rapture.http._
 import rapture.dom._
-import org.cheminot.misc.Logger
 import org.cheminot.misc.scheduler.Scheduler
 
 object Mailer {
 
   sealed trait Msg
   case class AddUp(mail: Mail) extends Msg
-  case class Squash(config: MailgunConfig) extends Msg
+  case class Squash(config: MailgunConfig, onError: PartialFunction[Throwable, Unit]) extends Msg
 
-  def init(config: Config) =
-    Scheduler.schedule(config.mailer.delay, config.mailer.period)(actor.cue(Squash(config.mailgun)))
+  def init(config: Config, onError: PartialFunction[Throwable, Unit]) =
+    Scheduler.schedule(config.mailer.delay, config.mailer.period) {
+      case _ => actor.cue(Squash(config.mailgun, onError))
+    }
 
   private val actor = {
     Actor.of[Msg](Seq.empty[Mail]) {
-      case Transition(Squash(config), mails) if(!mails.isEmpty) =>
+      case Transition(Squash(config, onError), mails) if(!mails.isEmpty) =>
         mails.groupBy(_.subject) map {
           case (_, grouped) if !grouped.isEmpty =>
             val mail = grouped.head
             val count = if(grouped.size > 1) s"[${grouped.size} times] " else ""
             val squashed = mail.copy(subject=count + mail.subject)
-            scala.util.Try(Mailgun.send(squashed)(config)).recover {
-              case e: Exception =>
-                Logger.error("Unable to send mail", e)
-            }
+            scala.util.Try(Mailgun.send(squashed)(config)).recover(onError)
           case _ =>
         }
         Update(Unit, Seq.empty)

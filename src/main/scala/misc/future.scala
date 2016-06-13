@@ -15,8 +15,7 @@ object FutureUtils {
   }
 
   def par[A, B](aaa: Seq[A], progress: Boolean = false)(f: (A) => B)(implicit ec: ExecutionContext): Seq[B] = {
-    val n = 20 //aaa.size / (THREADS_PER_POOL * 2)
-    if(progress) { Logger.info(s"[progress] total: ${aaa.size} | grouped: ${n}") }
+    val n = 20
     val counter = new AtomicInteger(0);
     val result = Await.result(
       groupSequentially(aaa, n) { a =>

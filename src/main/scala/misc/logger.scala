@@ -58,10 +58,3 @@ trait LoggerLike {
 }
 
 class Logger(val logger: Slf4jLogger) extends LoggerLike
-
-object Logger extends LoggerLike {
-
-  val logger = LoggerFactory.getLogger("cheminot.web")
-
-  def apply(name: String): Logger = new Logger(LoggerFactory.getLogger(name))
-}
