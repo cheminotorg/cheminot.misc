@@ -15,7 +15,7 @@ object Mailer {
   case class Squash(config: MailgunConfig) extends Msg
 
   def init(config: Config) =
-    Scheduler.schedule(config.mailer.delay, config.mailer.period, actor.cue(Squash(config.mailgun)))
+    Scheduler.schedule(config.mailer.delay, config.mailer.period)(actor.cue(Squash(config.mailgun)))
 
   private val actor = {
     Actor.of[Msg](Seq.empty[Mail]) {
