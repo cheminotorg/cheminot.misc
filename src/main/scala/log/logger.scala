@@ -1,4 +1,4 @@
-package org.cheminot.misc
+package org.cheminot.misc.log
 
 import org.slf4j.{ Logger => Slf4jLogger, LoggerFactory }
 
