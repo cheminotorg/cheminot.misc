@@ -29,6 +29,7 @@ object FutureUtils {
       },
       1.hours
     )
+    println("")
     result
   }
 
