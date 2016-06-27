@@ -1,30 +1,30 @@
 package org.cheminot.misc
 
 import java.util.concurrent.Executors
-import scala.concurrent.{ Future, ExecutionContext, Await }
+import scala.concurrent.{ Future => JFuture, ExecutionContext, Await }
 import scala.concurrent.duration._
 import java.util.concurrent.atomic.AtomicInteger
 
-object FutureUtils {
+object Future {
 
-  private def displayProgress(progress: Int) = {
+  val AVAILABLE_CPUS = Runtime.getRuntime().availableProcessors()
+
+  private def displayProgress(counter: Int, total: Int) = {
+    val progress = scala.math.round(counter.toFloat / total.toFloat * 100)
     val p = (progress * 70) / 100
     val todo = 70 - p
-    val total = List.fill(p)("#") ++: List.fill(todo)(" ")
-    print(s"[${total.mkString}] ${progress}%\r")
+    val bar = List.fill(p)("#") ++: List.fill(todo)(" ")
+     print(s"[${bar.mkString}] ${progress}% (${counter} / ${total})\r")
   }
 
-  def par[A, B](aaa: Seq[A], progress: Boolean = false)(f: (A) => B)(implicit ec: ExecutionContext): Seq[B] = {
-    val n = 20
-    val counter = new AtomicInteger(0);
+  def par[A, B](seq: Seq[A], progress: Boolean = false)(f: (A) => B)(implicit ec: ExecutionContext): Seq[B] = {
+    val counter = new AtomicInteger(0)
+    val n = seq.length / AVAILABLE_CPUS
     val result = Await.result(
-      groupSequentially(aaa, n) { a =>
-        Future(f(a)).andThen {
-          case _ =>
-            if(progress) {
-              val progress = scala.math.round(counter.incrementAndGet.toFloat / aaa.size.toFloat * 100)
-              displayProgress(progress.toInt)
-            }
+      groupSequentially(seq, n) { a =>
+        JFuture(f(a)).andThen {
+          case _ if progress =>
+            displayProgress(counter.incrementAndGet, seq.size)
         }
       },
       1.hours
@@ -33,17 +33,17 @@ object FutureUtils {
     result
   }
 
-  def groupSequentially[A, B](seq: Seq[A], i: Int)(f: A => Future[B])(implicit ec: ExecutionContext): Future[Seq[B]] = {
+  def groupSequentially[A, B](seq: Seq[A], i: Int)(f: A => JFuture[B])(implicit ec: ExecutionContext): JFuture[Seq[B]] = {
     val groups: Seq[Seq[A]] = seq.grouped(i).toSeq
     traverseSequentially[Seq[A], Seq[B]](groups) { group =>
-      Future.sequence(group.map(f))
+      JFuture.sequence(group.map(f))
     }.map(_.flatten)
   }
 
-  def traverseSequentially[A, B](seq: Seq[A])(f: A => Future[B])(implicit ec: ExecutionContext): Future[Seq[B]] = seq match {
+  def traverseSequentially[A, B](seq: Seq[A])(f: A => JFuture[B])(implicit ec: ExecutionContext): JFuture[Seq[B]] = seq match {
     case h +: t => f(h).flatMap { r =>
       traverseSequentially(t)(f) map (r +: _)
     }
-    case _ => Future.successful(Seq.empty)
+    case _ => JFuture.successful(Seq.empty)
   }
 }
