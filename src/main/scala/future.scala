@@ -27,7 +27,7 @@ object Future {
             displayProgress(counter.incrementAndGet, seq.size)
         }
       },
-      1.hours
+      Duration.Inf
     )
     println("")
     result
