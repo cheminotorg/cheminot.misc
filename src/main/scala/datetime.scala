@@ -29,4 +29,7 @@ object DateTime {
 
   def forPattern(s: String) =
     defaultSettings(DateTimeFormat.forPattern(s))
+
+  def minutesOfDay(datetime: JDateTime): Long =
+    (datetime.hourOfDay.get * 60) + datetime.minuteOfHour.get
 }
